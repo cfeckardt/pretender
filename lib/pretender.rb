@@ -7,6 +7,7 @@ module Pretender
   module Methods
     def impersonates(scope = :user, opts = {})
       impersonated_method = opts[:method] || :"current_#{scope}"
+      impersonator_method = opts[:impersonator_method] || impersonated_method
       impersonate_with = opts[:with] || proc { |id|
         klass = scope.to_s.classify.constantize
         primary_key = klass.respond_to?(:primary_key) ? klass.primary_key : :id
@@ -25,7 +26,7 @@ module Pretender
         define_method true_method do
           # TODO handle private methods
           raise Pretender::Error, "#{impersonated_method} must be defined before the impersonates method" unless sc.method_defined?(impersonated_method)
-          sc.instance_method(impersonated_method).bind(self).call
+          sc.instance_method(impersonator_method).bind(self).call
         end
       end
       helper_method(true_method) if respond_to?(:helper_method)
